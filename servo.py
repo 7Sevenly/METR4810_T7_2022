@@ -1,24 +1,33 @@
 # Micro Servo 9g Control class
 import RPi.GPIO as GPIO
+import pigpio
 import time
 
-servo_pin = 12
+servo_pin = 18
 
 # Initialise the pin as on output and PWM
-GPIO.setup(servo_pin, GPIO.OUT)
-pwm = GPIO.PWM(servo_pin, 50)  # 50 Hz
+pwm = pigpio.pi()
+pwm.set_mode(servo_pin, pigpio.OUTPUT)
 
-# Initialise the pwm with pulse off
-pwm.start(0)
-pwm.ChangeDutyCycle(7.5)  # Set starting position
-
+pwm.set_PWM_frequency(servo_pin, 50)
 
 # Activation function, angle variable of 0 to 180 degree
 def act(angle):
-    if 0 <= angle <= 180:
-        duty = (angle / 18) + 2
-        pwm.ChangeDutyCycle(duty)
-    else:
-        # Incorrect argument given
-        print("Incorrect argument. Angle must be between 0 and 180.")
+    # Ensure the given angle is within range
+    if angle < 0:
+        angle = 0
+    if angle > 180:
+        angle = 180
+    
+    # Determine the pulse width for the given angle
+    pulse_width = ((angle * 100) / 9) + 500
+    
+    # Set the pulse width
+    pwm.set_servo_pulsewidth(servo_pin, pulse_width)
+    time.sleep(2)
+    
+    # Turn off the pwm to save power
+    pwm.set_servo_pulsewidth(servo_pin, 0)
+    
     return
+
